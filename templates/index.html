@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Real-time Data and Charts</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.8.0/chart.min.js"></script>
+    <style>
+        body{
+            background-color: rgb(225, 230, 240);
+        }
+    </style>
+</head>
+<body>
+    <div class="container p-3" style="text-align: center;"> <br>
+        <img src="{{ url_for('static', filename='pics/logo.png')}}" alt="">
+        
+    </div>
+    <div class="p-1">
+        <div class="border" style="text-align: left;background-color: rgba(255, 255, 255, 0.568);">
+            <h1 class="p-2" style="text-align: center;">Technology Based Energy Monitoring and Report Development.</h1>
+            <h2 class="p-2"style="margin-left: 27%;">Course: CSE407 Green Computing</h2>
+            <h2 class="p-2"style="margin-left: 27%;">Semester: Spring 24</h2>
+            <h2 class="p-2"style="margin-left: 27%;">Section: 04</h2>
+            <h2 class="p-2"style="margin-left: 27%;">Group: 11</h2>
+            <h2 class="p-2"style="margin-left: 27%;">Instructor:	Amit Mandal (Lecturer, Department of CSE) <br></h2>
+        </div>
+    </div>
+
+    <div class="" style="background-color: aliceblue;">
+        <div class="row align-items-center">
+          <div class="col">
+            <br>
+            <h3 style="margin-left: 37%;">
+                Technology-based energy monitoring refers to the use of various technological tools and systems to track, analyze, and optimize energy consumption in residential, commercial, and industrial settings. This approach leverages advancements in sensors, data analytics, and communication technologies to provide real-time insights into energy usage patterns, identify inefficiencies, and implement strategies for conservation and cost savings. <br><br>By implementing technology-based energy monitoring solutions, organizations can achieve several benefits, including reduced energy costs, improved operational efficiency, enhanced sustainability, and compliance with regulatory requirements. Additionally, these systems empower consumers to make informed decisions about their energy usage and contribute to the transition towards a more sustainable energy future. </h3>
+
+<br>
+
+          </div>
+          
+          <div class="col">
+            <img src="{{ url_for('static', filename='pics/1.gif')}}" style="width: 600ppx;height: 600px;margin-left: 20%;" alt=""> 
+          </div>
+        </div>
+      </div>
+
+
+
+
+    <div class="container p-3">
+        
+    <h1>Showing The Real-time Data Collecting from Tuya API</h1><br>
+    <h5>Timestamp: <span id="timestamp"></span></h5>
+    <h5>Current: <span id="current">0 mA</span></h5>
+    <h5>Voltage: <span id="voltage">0 V</span></h5>
+    <h5>Power: <span id="power">0 W</span></h5>
+    <h5>kWh per Minute: <span id="kwh_per_minute">0</span></h5>
+    <h5>Cost per Minute: <span id="cost_per_minute">0</span></h5><br>
+    <h1 >Charts of Real-time Data</h1>
+    </div>
+
+    <div class=" p-2">
+    <canvas id="currentChart" width="2500" height="384"></canvas>
+    <canvas id="voltageChart" width="2500" height="384"></canvas>
+    <canvas id="powerChart" width="2500" height="384"></canvas>
+    <canvas id="kwhChart" width="2500" height="384"></canvas>
+    <canvas id="costChart" width="2500" height="384"></canvas>
+    </div>
+
+    <script>
+        // Define variables to hold chart instances
+        var currentChart, voltageChart, powerChart, kwhChart, costChart;
+
+        // Function to initialize charts
+        function initializeCharts() {
+            currentChart = createChart('currentChart', 'Current (mA)', 'blue');
+            voltageChart = createChart('voltageChart', 'Voltage (V)', 'red');
+            powerChart = createChart('powerChart', 'Power (W)', 'green');
+            kwhChart = createChart('kwhChart', 'kWh per Minute', 'orange');
+            costChart = createChart('costChart', 'Cost per Minute', 'purple');
+        }
+
+        // Function to create a Chart.js instance
+        function createChart(chartId, label, color) {
+            var ctx = document.getElementById(chartId).getContext('2d');
+            return new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: label,
+                        borderColor: color,
+                        borderWidth: 1,
+                        data: [],
+                    }],
+                },
+                options: {
+                    responsive: false,
+                    maintainAspectRatio: false,
+                },
+            });
+        }
+
+        // Function to update real-time data
+        function updateRealtimeData(data) {
+            document.getElementById('timestamp').textContent = data.Timestamp;
+            document.getElementById('current').textContent = data.Current + ' mA';
+            document.getElementById('voltage').textContent = data.Voltage + ' V';
+            document.getElementById('power').textContent = data.Power + ' W';
+            document.getElementById('kwh_per_minute').textContent = data['kWh per Minute'];
+            document.getElementById('cost_per_minute').textContent = data['Cost per Minute'];
+
+            // Update chart data
+            updateChartData(currentChart, data.Timestamp, data.Current);
+            updateChartData(voltageChart, data.Timestamp, data.Voltage);
+            updateChartData(powerChart, data.Timestamp, data.Power);
+            updateChartData(kwhChart, data.Timestamp, data['kWh per Minute']);
+            updateChartData(costChart, data.Timestamp, data['Cost per Minute']);
+        }
+
+        // Function to update chart data
+        function updateChartData(chart, label, value) {
+            chart.data.labels.push(label);
+            chart.data.datasets[0].data.push(value);
+
+            // Limit the number of data points displayed (e.g., last 50 data points)
+            const maxDataPoints = 250;
+            if (chart.data.labels.length > maxDataPoints) {
+                chart.data.labels.shift();
+                chart.data.datasets[0].data.shift();
+            }
+
+            chart.update();
+        }
+
+        // Initialize charts when the page loads
+        window.addEventListener('load', initializeCharts);
+
+        // Set up an interval to periodically update the charts with new data
+        setInterval(function () {
+            fetch('/update_realtime_data')
+                .then(function (response) {
+                    return response.json();
+                })
+                .then(function (data) {
+                    updateRealtimeData(data);
+                })
+                .catch(function (error) {
+                    console.error('Error fetching data:', error);
+                });
+        }, 60000); // Update every 60 seconds
+    </script>
+</body>
+</html>
